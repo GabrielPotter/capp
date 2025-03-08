@@ -1,0 +1,30 @@
+{
+    "calendarName": "tc1",
+    "tests": [
+        {
+            "snippetName": "workdays",
+            "date": ["2025-08-14","2025-08-20"],
+            "expected": [true,true]
+        },
+        {
+            "snippetName": "tc1_workdays",
+            "date": ["2025-08-20"],
+            "expected": [false]
+        },
+        {
+            "snippetName": "tc1_holidays",
+            "date": ["2025-08-20"],
+            "expected": [true]
+        },
+        {
+            "snippetName": "next_workday",
+            "date": ["2025-03-09"],
+            "expected": ["2025-03-10"]
+        },
+        {
+            "snippetName": "next_workday",
+            "date": ["2025-03-09","2025-03-10"],
+            "expected": ["2025-03-10","2025-03-11"]
+        }
+    ]
+}

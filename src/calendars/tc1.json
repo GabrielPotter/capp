@@ -1,0 +1,21 @@
+{
+    "name": "tc1",
+    "rules": [
+        {
+            "name": "workdays",
+            "file": "workdays.js"
+        },
+        {
+            "name": "tc1_holidays",
+            "file": "tc1_holidays.js"
+        },
+        {
+            "name": "tc1_workdays",
+            "file": "tc1_workdays.js"
+        },
+        {
+            "name": "next_workday",
+            "file": "next_workday.js"
+        }
+    ]
+}

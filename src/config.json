@@ -1,0 +1,6 @@
+{
+    "valid_input_formats": [
+        "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy","yyyy-MM-DDTHH:mm:ss±hh:mm","yyyy-MM-DDTHH:mm:ssZ"
+    ],
+    "valid_output_format": "yyyy-MM-dd"
+}
