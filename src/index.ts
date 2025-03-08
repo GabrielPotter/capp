@@ -1,4 +1,3 @@
-// index.ts
 import express, { Request, Response } from "express";
 import cors from "cors";
 import path from "path";
@@ -6,33 +5,21 @@ import path from "path";
 import { loadCalendarsWithHashCheck } from "./calendarLoader";
 import { SnippetRunner } from "./snippetRunner";
 
-// 1) Betöltjük a naptárakat (snippeteket) a src/calendar mappából
+
 const CALENDAR_FOLDER = path.join(__dirname, "calendars");
 const CONFIG_PATH = path.join(__dirname, "config.json");
-
 const registry = loadCalendarsWithHashCheck(CALENDAR_FOLDER, CONFIG_PATH);
-
-// 2) Példányosítunk egy SnippetRunner-t
 const snippetRunner = new SnippetRunner(registry);
 
-// 3) Express app
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-/**
- *  GET /calendars
- *    -> visszaadja a naptárak listáját (azaz a registry kulcsait)
- */
 app.get("/calendars", (req: Request, res: Response) => {
   const calendarNames = Object.keys(registry);
   res.json({ calendars: calendarNames });
 });
 
-/**
- *  GET /calendars/:calendarName
- *    -> visszaadja az adott naptár snippetjeinek listáját
- */
 app.get("/calendars/:calendarName", (req: Request, res: Response) => {
   const { calendarName } = req.params;
   const cal = registry[calendarName];
@@ -43,11 +30,6 @@ app.get("/calendars/:calendarName", (req: Request, res: Response) => {
   res.json({ calendar: calendarName, snippets: snippetNames });
 });
 
-/**
- *  GET /calendars/:calendarName/evaluate?rule=RULE&date=YYYY-MM-DD
- *    -> lefuttatja a snippetet a megadott naptárban,
- *       date paramétert átadja a context-be
- */
 app.get("/calendars/:calendarName/evaluate", (req: Request, res: Response) => {
   const { calendarName } = req.params;
   const { rule, date } = req.query;
@@ -74,7 +56,6 @@ app.get("/calendars/:calendarName/evaluate", (req: Request, res: Response) => {
   }
 });
 
-// Indítsuk a szervert
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Calendar REST server listening on port ${PORT}...`);

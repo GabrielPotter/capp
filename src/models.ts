@@ -1,5 +1,3 @@
-// models.ts
-
 export interface CalendarFile {
   name: string;  // "Hungary", "MyCalendar" stb.
   rules: { name: string; file: string }[];

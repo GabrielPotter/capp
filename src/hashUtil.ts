@@ -1,10 +1,5 @@
-// hashUtil.ts
 import crypto from "crypto";
 
-/**
- * Rekurzívan kulcs-sorrendben sorba rakott JSON-string készítése, 
- * majd abból SHA-256 hex digest generálása.
- */
 export function generateCalendarHash(registry: any): string {
   const stableJson = stableStringify(registry);
   const hash = crypto.createHash("sha256")
@@ -14,11 +9,6 @@ export function generateCalendarHash(registry: any): string {
   return hash;
 }
 
-/**
- * Egyszerű rekurzív kulcsrendezés + JSON.stringify.
- * A rekurzív kulcsrendezés azt jelenti, hogy egy 
- * objektum minden property-jét abc-sorrendben járunk be.
- */
 function stableStringify(obj: any): string {
   if (Array.isArray(obj)) {
     return "[" + obj.map((x) => stableStringify(x)).join(",") + "]";
@@ -29,7 +19,6 @@ function stableStringify(obj: any): string {
     );
     return "{" + keyValuePairs.join(",") + "}";
   } else {
-    // primitív típus (string, number, boolean, null)
     return JSON.stringify(obj);
   }
 }

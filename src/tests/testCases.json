@@ -2,19 +2,16 @@
   "calendarName": "Hungary",
   "tests": [
     {
-      "calendarName": "Hungary",
       "snippetName": "hungarian_workdays",
       "date": "2025-08-14",
       "expected": true
     },
     {
-      "calendarName": "Hungary",
       "snippetName": "hungarian_workdays",
       "date": "2025-08-20",
       "expected": false
     },
     {
-      "calendarName": "Hungary",
       "snippetName": "hungarian_holidays",
       "date": "2025-08-20",
       "expected": true
