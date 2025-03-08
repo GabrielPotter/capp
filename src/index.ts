@@ -3,12 +3,14 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import path from "path";
 
-import { loadCalendars } from "./calendarLoader";
+import { loadCalendarsWithHashCheck } from "./calendarLoader";
 import { SnippetRunner } from "./snippetRunner";
 
 // 1) Betöltjük a naptárakat (snippeteket) a src/calendar mappából
 const CALENDAR_FOLDER = path.join(__dirname, "calendars");
-const registry = loadCalendars(CALENDAR_FOLDER);
+const CONFIG_PATH = path.join(__dirname, "config.json");
+
+const registry = loadCalendarsWithHashCheck(CALENDAR_FOLDER, CONFIG_PATH);
 
 // 2) Példányosítunk egy SnippetRunner-t
 const snippetRunner = new SnippetRunner(registry);
