@@ -1,5 +1,5 @@
 export interface CalendarFile {
-  name: string;  // "Hungary", "MyCalendar" stb.
+  name: string; 
   rules: { name: string; file: string }[];
 }
 

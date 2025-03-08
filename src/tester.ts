@@ -17,7 +17,7 @@ interface TestDesc {
 const CALENDAR_FOLDER = path.join(__dirname, "calendars");
 const registry = loadCalendars(CALENDAR_FOLDER);
 const runner = new SnippetRunner(registry);
-const testCasesPath = path.join(__dirname, "tests", "testCases.json");
+const testCasesPath = path.join(__dirname, "tests", "test_tc1.json");
 const rawTestCases = fs.readFileSync(testCasesPath, "utf8");
 const testCases: TestDesc = JSON.parse(rawTestCases);
 
