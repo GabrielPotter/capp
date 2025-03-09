@@ -7,7 +7,8 @@ import { SnippetRunner } from "./snippetRunner";
 
 const CALENDAR_FOLDER = path.join(__dirname, "calendars");
 const CONFIG_PATH = path.join(__dirname, "config.json");
-const registry = loadCalendarsWithHashCheck(CALENDAR_FOLDER, CONFIG_PATH);
+const HASH_PATH = path.join(__dirname,"hash.json")
+const registry = loadCalendarsWithHashCheck(CALENDAR_FOLDER, HASH_PATH);
 const snippetRunner = new SnippetRunner(registry);
 
 const app = express();

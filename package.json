@@ -4,9 +4,10 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "build": "tsc && npm run build:exe",
+        "build": "tsc && npm run build:exe && npm run copy:config && npm run copy:calendar",
         "build:exe": "pkg dist/tester.js --targets node18-linux,node18-macos,node18-win --output bin/tester",
-        "postbuild": "rm -rf dist/calendars && cp -r src/calendars dist/calendars && rm -rf dist/tests && cp -r src/tests dist/tests && cp src/config.json dist/config.json",
+        "copy:config": "cp src/config.json dist/config.json && cp src/hash.json dist/hash.json",
+        "copy:calendar":"rm -rf dist/calendars && cp -r src/calendars dist/calendars",
         "start": "node dist/index.js"
     },
     "keywords": [],
@@ -15,6 +16,7 @@
     "dependencies": {
         "commander": "^13.1.0",
         "cors": "^2.8.5",
+        "date-fns": "^4.1.0",
         "express": "^4.21.2"
     },
     "devDependencies": {

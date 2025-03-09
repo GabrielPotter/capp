@@ -1,12 +1,3 @@
 {
-    "calendars": [
-        {
-            "calendarName": "Hungary",
-            "hash": "197381cc8ff7d30ddec5fc24b5679781fd497c57e9c2f28ac32b4461d111a152"
-        },
-        {
-            "calendarName": "MyCalendar",
-            "hash": "1234567890abcdef..."
-        }
-    ]
+    
 }

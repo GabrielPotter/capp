@@ -7,6 +7,7 @@ import { SnippetRunner } from "./snippetRunner";
 import { generateCalendarHash } from "./hashUtil";
 import { ConfigCalendar } from "./models";
 import { Command } from "commander";
+import {format} from "date-fns";
 
 interface TestCase {
     snippetName: string;
@@ -25,15 +26,20 @@ params
     .description("Calendar tester")
     .requiredOption("-c, --calendar <calendar_path>", "Specify calendar folder")
     .requiredOption("-t, --test <test_path>", "Specify test folder")
-    .requiredOption("-f, --config <config_path> ", "Specify config path");
+    .requiredOption("-h, --hash <hash_path> ", "Specify path of hash.json");
 
 params.parse(process.argv);
 const options = params.opts();
 
 const CALENDAR_FOLDER = path.join(process.cwd(), options.calendar);
 const TEST_FOLDER = path.join(process.cwd(), options.test);
+const HASH_KEYS_FILE = path.join(process.cwd(), options.hash, "hash.json")
 const registry = loadCalendars(CALENDAR_FOLDER);
 const runner = new SnippetRunner(registry);
+
+const isBoolean = (value: any): boolean => typeof value === "boolean";
+const isDate = (value: any): boolean => value instanceof Date;
+
 
 function main() {
     const files = fs.readdirSync(TEST_FOLDER).filter((f) => f.endsWith(".json") && f.startsWith("test_"));
@@ -55,6 +61,10 @@ function main() {
                 console.error(`  ERROR: snippet execution threw: ${err.message}`);
                 errCt++;
             }
+            if(isDate(result)) {
+                result = format(result,"yyyy-MM-dd")
+            }
+            
             if (result !== expected) {
                 console.error(`  FAIL: got '${result}', but expected '${expected}'`);
                 errCt++;
@@ -76,7 +86,10 @@ function main() {
     });
 
     console.log(`All tests passed successfully!`);
-    console.log(`Calendars content hash: ${JSON.stringify(config, null, 4)}`);
+    const hashKeys = JSON.stringify(config, null, 4);
+    //console.log(`Calendars content hash: ${secure}`);
+    fs.writeFileSync(HASH_KEYS_FILE, hashKeys, "utf8");
+    console.log(`Hash keys written to ${HASH_KEYS_FILE}`);
 }
 
 main();
