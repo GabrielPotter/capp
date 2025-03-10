@@ -1,4 +1,4 @@
-# Calendar Rule Engine – README
+# capp
 
 This project is a Node.js + TypeScript application that manages one or more **calendars**, each containing **rules** (snippets) that define how to evaluate certain conditions on dates (e.g., “is it a workday?”, “is it a holiday?”, etc.). 
 1. Storing calendars in JSON files.  
@@ -17,54 +17,26 @@ Below is a detailed overview of how the system is structured, configured, and us
 
 1. [Project Structure](#project-structure)  
 2. [Installation & Setup](#installation--setup)  
-4. [Calendars and Snippets](#calendars-and-snippets)  
+3. [Calendars and Snippets](#calendars-and-snippets)  
    - [Calendar JSON Example](#calendar-json-example)  
    - [Snippet JS Example](#snippet-js-example)  
-5. [Config File with Hashes](#config-file-with-hashes)  
-6. [Tester Application](#tester-application)  
-7. [Express REST Server](#express-rest-server)  
+4. [Config File and Hashes](#config-file-and-hashes)  
+5. [Express REST Server](#express-rest-server)  
    - [Routes Overview](#routes-overview)  
-8. [Generating and Validating Hashes](#generating-and-validating-hashes)  
-   - [Tester Hash Generation](#tester-hash-generation)  
-   - [Loader Hash Check](#loader-hash-check)  
-9. [Running the Project](#running-the-project)  
+6. [Generating and Validating Hashes](#generating-and-validating-hashes)  
+7. [Running the Project](#running-the-project)  
    - [Local Development](#local-development)  
    - [Testing Calendars](#testing-calendars)  
-   
+
 ---
 
 ## Project Structure
 
-A typical folder layout might look like this:
-
-```
-capp/
-├─ package.json
-├─ tsconfig.json
-├─ config.json                <-- Optional config listing calendars & expected hashes
-├─ hash.json
-└─ src/
-   ├─ index.ts                <-- Express server entry point
-   ├─ tester.ts               <-- CLI tester for snippets
-   ├─ models.ts               <-- TypeScript interfaces (CalendarFile, etc.)
-   ├─ hashUtil.ts             <-- Utility for generating stable JSON + hashing
-   ├─ calendarLoader.ts       <-- Loads calendars + snippet code from .js files
-   ├─ snippetRunner.ts        <-- The snippet "eval" runner, allowing snippet recursion
-   └─ calendar/
-      ├─ Hungary.json         <-- Calendar JSON
-      ├─ munkanap.js         <-- rule snippet code
-      ├─ hungarian_holidays.js
-      └─ hungarian_workdays.js
-   ├─ tests/                     <-- Optional testcases used by the tester
-      └─ test_tc1.json
-
-```
-
-In this structure:
-
-- `src/calendar/` contains multiple `.json` files (one per calendar), plus the `.js` snippet files that each JSON references.  
-- `config.json` is optional; it holds (calendarName, hash) pairs for verifying that a loaded calendar matches a tested version.  
-- `testCases.json` is optional for the tester – it lists (calendarName, snippetName, date, expectedValue) tests.
+- The `src/calendar/` directory serves testing and demo purposes, containing multiple .json files (one per calendar), along with the .js snippet files referenced by each JSON.
+- The `src/tests/` folder contains test .json files used for testing the calendars. The tester application utilizes these files to validate the calendars. See the [Tester Application](#tester-application) section for more details.
+- The `src/scripts/` folder contains Bash scripts for testing the application via the REST API. These scripts use curl commands to test the API endpoints and also serve as documentation for REST API calls.
+- The `config.json` file defines the validation rules for date-type data when making REST API calls and specifies the date format conversion in the API responses.
+- The `hash.json` file contains the hash keys for validated calendars.
 
 ---
 
@@ -81,55 +53,88 @@ In this structure:
 
 ---
 ## Calendars and Snippets
+## Calendar JSON Example
+Inside the /calendars/ folder, each .json file represents a calendar. The calendar descriptor includes the calendar name and references to the JavaScript snippet files associated with the calendar.
+
+Each reference consists of:
+
+- A symbolic name (rule name) used to refer to the rule.
+- A file name pointing to the .js file that contains the corresponding rule snippet code.
+
+```json
+{
+    "name": "tc1",
+    "rules": [
+        {
+            "name": "workdays",
+            "file": "workdays.js"
+        },
+        {
+            "name": "tc1_holidays",
+            "file": "tc1_holidays.js"
+        },
+        {
+            "name": "tc1_workdays",
+            "file": "tc1_workdays.js"
+        },
+        {
+            "name": "next_workday",
+            "file": "next_workday.js"
+        }
+    ]
+}
+```
 
 ### Snippet JS Example
 
-A typical snippet file: `munkanap.js`:
+A typical snippet file: `snipet.js`:
 
 ```js
 function rule(context) {
-  const date = context.date;
-  const day = date.getDay(); // 0=Sunday, 1..5=Mon..Fri, 6=Saturday
-  return day >= 1 && day <= 5;
+  ... snipet body code ...
+  return return value;
 }
 return rule(context);
 ```
 
 > Notice we do a final `return rule(context)` so that `eval` ultimately has a non-undefined value.
 
+> you can examine a lot of example snipets in `src/calendar`
+
+Naming conventions
+
 ---
 
-## Config File with Hashes
+## Config File and Hashes
 
 A `config.json` might look like:
 
 ```json
 {
-  "calendars": [
-    {
-      "calendarName": "Hungary",
-      "hash": "f3de983ab1fa45e96c6eb8..." 
-    },
-    {
-      "calendarName": "MyCalendar",
-      "hash": "abcdef1234567..."
-    }
-  ]
+    "valid_input_formats": [
+        "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy","yyyy-MM-DDTHH:mm:ss±hh:mm","yyyy-MM-DDTHH:mm:ssZ"
+    ],
+    "valid_output_format": "yyyy-MM-dd"
 }
 ```
 
+A `hash.json` might look like
+
+```json
+{
+    "calendars": [
+        {
+            "calendarName": "tc1",
+            "hash": "b5672b3920d796572cb98e8adfc9b458fa14c77f7ebc403c1bf2b675f5abfff4"
+        }
+    ]
+}
+```
 - Each object has the **calendarName** and **hash** that your tester previously generated and stored.  
 - If the loaded calendar’s hash does not match, the loader excludes it.
 
 ---
 
-## Tester Application
-
-A script to run direct tests on the snippets without using REST:
-
-- If you want to produce or update a **hash** after all tests pass, you can add logic to generate the final hash and store it somewhere.
-
----
 
 ## Express REST Server
 
@@ -144,31 +149,34 @@ You can also run an **Express** server to expose these calendars via REST:
   Lists available snippet names for that calendar.  
 - `GET /calendars/:calendarName/evaluate?rule=RULE&date=YYYY-MM-DD`  
   Invokes the snippet and returns `{ "result": <snippetOutput> }`.
-
+> Examples of REST API calls can be found in the `src/tests/` folder.
 ---
 
 ## Generating and Validating Hashes
 
-The **hash** workflow:
+The tester application allows verifying whether the rules (snippets) written for each calendar function correctly.
+```bash
+bin/tester-linux -c ./src/calendars -t ./src/tests -s ./src 
+```
+- -c --calendar <calendar_path> The folder where the JSON files describing the calendars and their corresponding JavaScript snippet files are located.
+- -t --test <tester_path> The folder where the test files are located.
+- -h --hash <hash_folder> The folder where the hash.json file located.
 
-1. You run the **tester** or a custom script to load each calendar, produce a stable JSON structure, and do a **`SHA-256`** with sorted keys.  
-2. Store that resulting hash in your `config.json` – e.g.:
-   ```json
-   {
-     "calendars": [
-       { "calendarName": "Hungary", "hash": "...calculatedSha..." }
-     ]
-   }
-   ```
-3. When the **loader** runs (in production or at server startup), it loads each calendar, recalculates the hash, and compares with `config.json`.  
-4. If the hash differs, the calendar is excluded or flagged as invalid.
+Run the tester application with the prepared calendars and test files. The application reads all test files from the tests folder and executes all test steps.
 
-### Tester Hash Generation
+- If a test fails, an error will be logged in the console.
+- If all tests pass successfully, the application generates a verification hash key for each calendar found in the calendar_path folder.
+- The generated hash keys are written to the hash.json file inside the hash_folder.
 
-You can easily add logic in the tester code that – after all tests pass – prints out the final hash. For example:
+**Final Steps**
 
+- If everything is correct, copy the contents of calendar_path into the application's calendars/ folder.
+- Move the hash.json file from hash_folder to the application's root directory.
 
-### Loader Hash Check
+Start the application. 
+``` bash
+node <app root folder>/index.js
+```
 
 When the server starts, it calls `loadCalendarsWithHashCheck`, which re-generates the hash in exactly the same manner. If mismatched, that calendar is not stored in the registry.
 
@@ -180,9 +188,11 @@ When the server starts, it calls `loadCalendarsWithHashCheck`, which re-generate
 
 1. **Build**:
    ```bash
-   npx tsc
+   npm run build
    ```
    This compiles TypeScript into `dist/`.
+
+   Compiles tester into `/bin`
 
 2. **Run the server**:
    ```bash
@@ -194,8 +204,6 @@ When the server starts, it calls `loadCalendarsWithHashCheck`, which re-generate
 
 To run the CLI tester:
 ```bash
-node dist/tester.js
+bin/tester_linux --help
 ```
-- Reads `testCases.json`, loads calendars, checks each snippet for each date.  
-- If any test fails, it exits with code `1`. Otherwise, prints success.
 

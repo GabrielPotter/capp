@@ -5,11 +5,11 @@ export class SnippetRunner {
     runSnippet(calendarName: string, snippetName: string, context: Record<string, any>): any {
         const cal = this.registry[calendarName];
         if (!cal) {
-            throw new Error(`Naptár nem létezik: ${calendarName}`);
+            throw new Error(`Invalid calendar name: ${calendarName}`);
         }
         const code = cal[snippetName];
         if (!code) {
-            throw new Error(`Snippet nem létezik: ${snippetName} (naptár: ${calendarName})`);
+            throw new Error(`Invalid snippet name: ${snippetName} (calendar: ${calendarName})`);
         }
         const extendedContext = {
             ...context,

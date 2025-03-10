@@ -15,7 +15,6 @@ const snippetRunner = new SnippetRunner(registry);
 
 function isDateMatchingFormat(dateString: string, formatString: string): boolean {
     const parsedDate = parse(dateString, formatString, new Date());
-    // Check if parsing was successful and the formatted date matches the original input
     return isValid(parsedDate) && format(parsedDate, formatString) === dateString;
 }
 function isDateMatchingAnyFormat(dateString: string, formats: string[]): boolean {
