@@ -7,12 +7,12 @@ import { SnippetRunner } from "./snippetRunner";
 import { generateCalendarHash } from "./hashUtil";
 import { ConfigCalendar } from "./models";
 import { Command } from "commander";
-import {format} from "date-fns";
+import { format } from "date-fns";
 
 interface TestCase {
     snippetName: string;
-    date: string;
-    expected: any;
+    date: string[];
+    expected: any[];
 }
 interface TestDesc {
     calendarName: string;
@@ -33,13 +33,17 @@ const options = params.opts();
 
 const CALENDAR_FOLDER = path.join(process.cwd(), options.calendar);
 const TEST_FOLDER = path.join(process.cwd(), options.test);
-const HASH_KEYS_FILE = path.join(process.cwd(), options.hash, "hash.json")
+const HASH_KEYS_FILE = path.join(process.cwd(), options.hash, "hash.json");
 const registry = loadCalendars(CALENDAR_FOLDER);
 const runner = new SnippetRunner(registry);
 
 const isBoolean = (value: any): boolean => typeof value === "boolean";
 const isDate = (value: any): boolean => value instanceof Date;
 
+function arraysAreEqual(arr1: (string | boolean)[], arr2: (string | boolean)[]): boolean {
+    if (arr1.length !== arr2.length) return false;
+    return arr1.every((value, index) => value === arr2[index]);
+}
 
 function main() {
     const files = fs.readdirSync(TEST_FOLDER).filter((f) => f.endsWith(".json") && f.startsWith("test_"));
@@ -53,7 +57,10 @@ function main() {
             const tc = testCases.tests[i];
             const { snippetName, date, expected } = tc;
             console.log(`Test #${i + 1}: ${testCases.calendarName}.${snippetName} on ${date}, expecting: ${expected}`);
-            const dateObj = new Date(date);
+            const dateObj: Date[] = [];
+            date.forEach((element) => {
+                dateObj.push(new Date(element));
+            });
             let result;
             try {
                 result = runner.runSnippet(testCases.calendarName, snippetName, { date: dateObj });
@@ -61,11 +68,16 @@ function main() {
                 console.error(`  ERROR: snippet execution threw: ${err.message}`);
                 errCt++;
             }
-            if(isDate(result)) {
-                result = format(result,"yyyy-MM-dd")
-            }
-            
-            if (result !== expected) {
+            const converted:(string|boolean)[] = [];
+            result.forEach((element: any) => {
+                if (isDate(element)) {
+                    converted.push(format(element, "yyyy-MM-dd"));
+                } else {
+                    converted.push(element);
+                }
+            });
+
+            if (!arraysAreEqual(converted,expected)) {
                 console.error(`  FAIL: got '${result}', but expected '${expected}'`);
                 errCt++;
             }
