@@ -1,8 +1,8 @@
 {
-    "name": "capp",
-    "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
+    "name": "@gabrielpotter/capp",
+    "version": "1.0.1",
+    "description": "Calendar App",
+    "main": "dist/index.js",
     "scripts": {
         "build": "tsc && npm run build:exe && npm run copy:config && npm run copy:calendar",
         "build:exe": "pkg dist/tester.js --targets node18-linux,node18-macos,node18-win --output bin/tester",
