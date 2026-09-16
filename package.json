@@ -1,6 +1,6 @@
 {
     "name": "@gabrielpotter/capp",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Calendar rules engine: define calendars as JSON + JS snippets, validate them with hashes, and serve them over a REST API or use them as a library.",
     "main": "dist/lib.js",
     "types": "dist/lib.d.ts",
