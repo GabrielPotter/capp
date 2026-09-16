@@ -4,7 +4,7 @@ function rule(context) {
     date.forEach((element) => {
         for (let i = 0; i < 7; i++) {
             element.setDate(element.getDate() + 1);
-            if (context.runSnippet("tc1", "workdays", { date: [element] })[0]) {
+            if (context.runSnippet("tc1", "tc1_weekdays", { date: [element] })[0]) {
                 result.push(element);
                 break;
             }

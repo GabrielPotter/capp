@@ -59,7 +59,7 @@ app.listen(3000);
 // Or use the pieces directly:
 const registry = loadCalendarsWithHashCheck("./my-calendars", "./my-hashes/hash.json");
 const runner = new SnippetRunner(registry);
-const result = runner.runSnippet("tc1", "workdays", { date: [new Date("2025-08-14")] });
+const result = runner.runSnippet("tc1", "tc1_weekdays", { date: [new Date("2025-08-14")] });
 ```
 
 `startServer(options)` is a convenience wrapper that calls `createServer` and immediately `.listen()`s.
@@ -109,10 +109,10 @@ Each `.json` file in a calendar folder describes one calendar: its name, and the
 {
     "name": "tc1",
     "rules": [
-        { "name": "workdays", "file": "workdays.js" },
+        { "name": "tc1_weekdays", "file": "tc1_weekdays.js" },
         { "name": "tc1_holidays", "file": "tc1_holidays.js" },
         { "name": "tc1_workdays", "file": "tc1_workdays.js" },
-        { "name": "next_workday", "file": "next_workday.js" }
+        { "name": "tc1_next_workday", "file": "tc1_next_workday.js" }
     ]
 }
 ```
