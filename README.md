@@ -133,6 +133,25 @@ return rule(context);
 
 > See `src/calendars` for real examples.
 
+### A more complex example: computed holidays and cross-calendar composition
+
+`src/calendars` also ships two calendars that go beyond fixed-date lookups, to show off two things the engine supports but `tc1` alone doesn't demonstrate:
+
+- **`us_holidays`** — computes holidays that fall on the *nth weekday of a month* (e.g. "3rd Monday of January" for MLK Day, "last Monday of May" for Memorial Day) instead of a fixed date, and applies the US federal "observed date" rule (a holiday landing on Saturday is observed the preceding Friday; on Sunday, the following Monday):
+  - `us_holidays_raw` — the actual calendar date of each holiday, unshifted.
+  - `us_holidays_observed` — calls `us_holidays_raw` and shifts weekend holidays to the adjacent weekday.
+- **`combined`** — a calendar that doesn't define any holidays of its own. Instead it composes rules from *both* `tc1` and `us_holidays` by calling `context.runSnippet(otherCalendarName, otherRuleName, ctx)` — since `runSnippet` takes an explicit calendar name, a snippet can call into any calendar loaded in the same registry, not just its own:
+  - `combined_workday` — true only if the date is a weekday in neither calendar's holiday list (`tc1_holidays` OR `us_holidays_observed`).
+  - `combined_next_workday` — walks forward day by day (like `tc1_next_workday`) but using `combined_workday`, so it skips holidays from either country.
+  - `combined_add_business_days` — generalizes the same walk to advance a configurable number of business days via `context.days` (defaults to `1`). This one is only reachable through the library API, since the REST endpoint and the CLI tester only forward `date`, not arbitrary context fields:
+    ```ts
+    const runner = new SnippetRunner(registry);
+    const threeDaysOut = runner.runSnippet("combined", "combined_add_business_days", {
+        date: [new Date("2026-07-01")],
+        days: 3,
+    });
+    ```
+
 ---
 
 ## Config File and Hashes

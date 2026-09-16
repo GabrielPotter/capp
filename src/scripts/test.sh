@@ -45,3 +45,19 @@ echo -e "\n--------------------------------------"
 echo -e "\n🔹 Use invalid calendar ..."
 curl -X GET "$url/calendars/tc1X/evaluate?rule=workdaysX&date=invalid"
 echo -e "\n--------------------------------------"
+
+echo -e "\n🔹 Checking if '2026-07-04' (Saturday) is a raw US holiday..."
+curl -X GET "$url/calendars/us_holidays/evaluate?rule=us_holidays_raw&date=2026-07-04"
+echo -e "\n--------------------------------------"
+
+echo -e "\n🔹 Checking the observed date for the same holiday ('2026-07-03', shifted from Saturday)..."
+curl -X GET "$url/calendars/us_holidays/evaluate?rule=us_holidays_observed&date=2026-07-03"
+echo -e "\n--------------------------------------"
+
+echo -e "\n🔹 Checking 'combined' workday on a tc1-only holiday ('2026-08-20')..."
+curl -X GET "$url/calendars/combined/evaluate?rule=combined_workday&date=2026-08-20"
+echo -e "\n--------------------------------------"
+
+echo -e "\n🔹 Get the next 'combined' workday after '2026-07-02' (skips the observed US holiday and the weekend)..."
+curl -X GET "$url/calendars/combined/evaluate?rule=combined_next_workday&date=2026-07-02"
+echo -e "\n--------------------------------------"

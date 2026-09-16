@@ -1,8 +1,16 @@
 {
     "calendars": [
         {
+            "calendarName": "combined",
+            "hash": "02ca61c040c805432a92d573717aa0294ac1798337e5ef790195bd803540d844"
+        },
+        {
             "calendarName": "tc1",
             "hash": "55cccb5c3f89b70ac0e4745305207bc21783bbe9522411348dd1de9fafeaf39a"
+        },
+        {
+            "calendarName": "us_holidays",
+            "hash": "d7a443daa35441adb18e23d62781f22f77246d187129739d972bba2283996dd1"
         }
     ]
 }

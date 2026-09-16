@@ -1,0 +1,40 @@
+{
+    "calendarName": "us_holidays",
+    "tests": [
+        {
+            "snippetName": "us_holidays_raw",
+            "date": ["2026-07-04"],
+            "expected": [true]
+        },
+        {
+            "snippetName": "us_holidays_raw",
+            "date": ["2026-07-03"],
+            "expected": [false]
+        },
+        {
+            "snippetName": "us_holidays_raw",
+            "date": ["2026-01-19"],
+            "expected": [true]
+        },
+        {
+            "snippetName": "us_holidays_observed",
+            "date": ["2026-07-04"],
+            "expected": [false]
+        },
+        {
+            "snippetName": "us_holidays_observed",
+            "date": ["2026-07-03"],
+            "expected": [true]
+        },
+        {
+            "snippetName": "us_holidays_observed",
+            "date": ["2026-01-19"],
+            "expected": [true]
+        },
+        {
+            "snippetName": "us_holidays_observed",
+            "date": ["2026-07-06"],
+            "expected": [false]
+        }
+    ]
+}

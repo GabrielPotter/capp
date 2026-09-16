@@ -1,0 +1,30 @@
+{
+    "calendarName": "combined",
+    "tests": [
+        {
+            "snippetName": "combined_workday",
+            "date": ["2026-08-20"],
+            "expected": [false]
+        },
+        {
+            "snippetName": "combined_workday",
+            "date": ["2026-07-03"],
+            "expected": [false]
+        },
+        {
+            "snippetName": "combined_workday",
+            "date": ["2026-07-01"],
+            "expected": [true]
+        },
+        {
+            "snippetName": "combined_next_workday",
+            "date": ["2026-07-02"],
+            "expected": ["2026-07-06"]
+        },
+        {
+            "snippetName": "combined_add_business_days",
+            "date": ["2026-07-01"],
+            "expected": ["2026-07-02"]
+        }
+    ]
+}

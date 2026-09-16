@@ -1,0 +1,17 @@
+{
+    "name": "combined",
+    "rules": [
+        {
+            "name": "combined_workday",
+            "file": "combined_workday.js"
+        },
+        {
+            "name": "combined_next_workday",
+            "file": "combined_next_workday.js"
+        },
+        {
+            "name": "combined_add_business_days",
+            "file": "combined_add_business_days.js"
+        }
+    ]
+}

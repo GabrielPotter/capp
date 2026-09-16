@@ -1,0 +1,13 @@
+{
+    "name": "us_holidays",
+    "rules": [
+        {
+            "name": "us_holidays_raw",
+            "file": "us_holidays_raw.js"
+        },
+        {
+            "name": "us_holidays_observed",
+            "file": "us_holidays_observed.js"
+        }
+    ]
+}
