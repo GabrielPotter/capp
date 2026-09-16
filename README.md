@@ -1,107 +1,137 @@
 # capp
 
-This project is a Node.js + TypeScript application that manages one or more **calendars**, each containing **rules** (snippets) that define how to evaluate certain conditions on dates (e.g., “is it a workday?”, “is it a holiday?”, etc.). 
-1. Storing calendars in JSON files.  
-2. Storing each calendar rule (snippet) in external `.js` files.  
-3. Dynamically loading and evaluating these JavaScript snippets with `eval`.  
-4. Allowing snippets to call each other (even recursively).  
-5. Generating a hash of each calendar’s content (for verification).  
-6. Optionally rejecting/loading calendars based on expected hash values from a `hash.json` file.  
-7. Providing both a **tester** (CLI) and an **Express-based** REST server.
+`capp` is a Node.js + TypeScript calendar rules engine. It manages one or more **calendars**, each containing **rules** (snippets) that evaluate conditions on dates (e.g. "is it a workday?", "is it a holiday?").
 
-Below is a detailed overview of how the system is structured, configured, and used.
+1. Calendars are stored as JSON files.
+2. Each calendar rule (snippet) lives in an external `.js` file.
+3. Snippets are dynamically loaded and evaluated (via `eval` — see [Security](#security) below).
+4. Snippets can call each other, even recursively.
+5. Each calendar's content is hashed for integrity verification.
+6. Calendars are rejected/skipped if their hash doesn't match an expected value in `hash.json`.
+7. The package can be used as a **library**, a **CLI tester**, or an **Express-based REST server**.
 
 ---
 
 ## Table of Contents
 
-1. [Project Structure](#project-structure)  
-2. [Installation & Setup](#installation--setup)  
-3. [Calendars and Snippets](#calendars-and-snippets)  
-   - [Calendar JSON Example](#calendar-json-example)  
-   - [Snippet JS Example](#snippet-js-example)  
-4. [Config File and Hashes](#config-file-and-hashes)  
-5. [Express REST Server](#express-rest-server)  
-   - [Routes Overview](#routes-overview)  
-6. [Generating and Validating Hashes](#generating-and-validating-hashes)  
-7. [Running the Project](#running-the-project)  
-   - [Local Development](#local-development)  
-   - [Testing Calendars](#testing-calendars)  
+1. [Installation](#installation)
+2. [Usage](#usage)
+   - [As a library](#as-a-library)
+   - [As a REST server (CLI)](#as-a-rest-server-cli)
+   - [Validating calendars (CLI tester)](#validating-calendars-cli-tester)
+3. [Calendars and Snippets](#calendars-and-snippets)
+   - [Calendar JSON Example](#calendar-json-example)
+   - [Snippet JS Example](#snippet-js-example)
+4. [Config File and Hashes](#config-file-and-hashes)
+5. [REST API Routes](#rest-api-routes)
+6. [Security](#security)
+7. [Development](#development)
 
 ---
 
-## Project Structure
+## Installation
 
-- The `src/calendar/` directory serves testing and demo purposes, containing multiple .json files (one per calendar), along with the .js snippet files referenced by each JSON.
-- The `src/tests/` folder contains test .json files used for testing the calendars. The tester application utilizes these files to validate the calendars. See the [Tester Application](#tester-application) section for more details.
-- The `src/scripts/` folder contains Bash scripts for testing the application via the REST API. These scripts use curl commands to test the API endpoints and also serve as documentation for REST API calls.
-- The `config.json` file defines the validation rules for date-type data when making REST API calls and specifies the date format conversion in the API responses.
-- The `hash.json` file contains the hash keys for validated calendars.
+```bash
+npm install @gabrielpotter/capp
+```
+
+This gives you:
+- A library entry point (`loadCalendarsWithHashCheck`, `SnippetRunner`, `createServer`, `startServer`, ...).
+- Two CLI commands: `capp-server` and `capp-tester`.
+
+---
+
+## Usage
+
+### As a library
+
+```ts
+import { createServer, loadCalendarsWithHashCheck, SnippetRunner } from "@gabrielpotter/capp";
+
+// Mount the REST API into your own Express app / server lifecycle:
+const app = createServer({
+    calendarFolder: "./my-calendars",
+    configPath: "./my-config.json",
+    hashPath: "./my-hashes/hash.json",
+});
+app.listen(3000);
+
+// Or use the pieces directly:
+const registry = loadCalendarsWithHashCheck("./my-calendars", "./my-hashes/hash.json");
+const runner = new SnippetRunner(registry);
+const result = runner.runSnippet("tc1", "workdays", { date: [new Date("2025-08-14")] });
+```
+
+`startServer(options)` is a convenience wrapper that calls `createServer` and immediately `.listen()`s.
+
+### As a REST server (CLI)
+
+```bash
+npx capp-server -c ./my-calendars --config ./my-config.json -h ./my-hashes -p 3000
+```
+
+- `-c, --calendar <path>` — folder with calendar JSON files + snippet `.js` files.
+- `--config <path>` — path to `config.json` (date format validation rules).
+- `-h, --hash <path>` — folder containing `hash.json`.
+- `-p, --port <port>` — port to listen on (default `3000`).
+
+The package ships a small bundled example calendar you can point at directly to try things out:
+
+```bash
+npx capp-server -c node_modules/@gabrielpotter/capp/dist/calendars \
+  --config node_modules/@gabrielpotter/capp/dist/config.json \
+  -h node_modules/@gabrielpotter/capp/dist
+```
+
+### Validating calendars (CLI tester)
+
+Before deploying a calendar, validate it against test cases and generate its hash:
+
+```bash
+npx capp-tester -c ./my-calendars -t ./my-tests -h ./my-hashes
+```
+
+- `-c, --calendar <path>` — folder with calendar JSON + snippet files.
+- `-t, --test <path>` — folder with test case files (see `src/tests/test_tc1.json` for the format).
+- `-h, --hash <path>` — folder where the generated `hash.json` is written.
+
+If any test fails, the tester exits with a non-zero status and no hash is trusted. If all tests pass, it writes fresh hashes to `hash.json` — copy that alongside your calendar folder for the server to trust it.
 
 ---
 
-## Installation & Setup
-
-1. **Clone or download** this project.  
-2. In the root directory, run:
-   ```bash
-   npm install
-   ```
-   This installs `express`, `typescript`, and other required dependencies/devDependencies.
-
-3. Make sure `tsconfig.json` is in place with appropriate settings (e.g. `outDir`, `rootDir`, etc.).
-
----
 ## Calendars and Snippets
-## Calendar JSON Example
-Inside the /calendars/ folder, each .json file represents a calendar. The calendar descriptor includes the calendar name and references to the JavaScript snippet files associated with the calendar.
 
-Each reference consists of:
+### Calendar JSON Example
 
-- A symbolic name (rule name) used to refer to the rule.
-- A file name pointing to the .js file that contains the corresponding rule snippet code.
+Each `.json` file in a calendar folder describes one calendar: its name, and the rules (snippets) it exposes.
 
 ```json
 {
     "name": "tc1",
     "rules": [
-        {
-            "name": "workdays",
-            "file": "workdays.js"
-        },
-        {
-            "name": "tc1_holidays",
-            "file": "tc1_holidays.js"
-        },
-        {
-            "name": "tc1_workdays",
-            "file": "tc1_workdays.js"
-        },
-        {
-            "name": "next_workday",
-            "file": "next_workday.js"
-        }
+        { "name": "workdays", "file": "workdays.js" },
+        { "name": "tc1_holidays", "file": "tc1_holidays.js" },
+        { "name": "tc1_workdays", "file": "tc1_workdays.js" },
+        { "name": "next_workday", "file": "next_workday.js" }
     ]
 }
 ```
 
 ### Snippet JS Example
 
-A typical snippet file: `snipet.js`:
+A typical snippet file, e.g. `snippet.js`:
 
 ```js
 function rule(context) {
-  ... snipet body code ...
-  return return value;
+  // ... snippet body ...
+  return returnValue;
 }
 return rule(context);
 ```
 
-> Notice we do a final `return rule(context)` so that `eval` ultimately has a non-undefined value.
+> The final `return rule(context)` is required so `eval` produces a non-undefined value.
 
-> you can examine a lot of example snipets in `src/calendar`
-
-Naming conventions
+> See `src/calendars` for real examples.
 
 ---
 
@@ -112,98 +142,56 @@ A `config.json` might look like:
 ```json
 {
     "valid_input_formats": [
-        "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy","yyyy-MM-DDTHH:mm:ss±hh:mm","yyyy-MM-DDTHH:mm:ssZ"
+        "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy", "yyyy-MM-DDTHH:mm:ss±hh:mm", "yyyy-MM-DDTHH:mm:ssZ"
     ],
     "valid_output_format": "yyyy-MM-dd"
 }
 ```
 
-A `hash.json` might look like
+A `hash.json` might look like:
 
 ```json
 {
     "calendars": [
-        {
-            "calendarName": "tc1",
-            "hash": "b5672b3920d796572cb98e8adfc9b458fa14c77f7ebc403c1bf2b675f5abfff4"
-        }
+        { "calendarName": "tc1", "hash": "b5672b3920d796572cb98e8adfc9b458fa14c77f7ebc403c1bf2b675f5abfff4" }
     ]
 }
 ```
-- Each object has the **calendarName** and **hash** that your tester previously generated and stored.  
-- If the loaded calendar’s hash does not match, the loader excludes it.
+
+- Each entry has the **calendarName** and the **hash** previously generated by `capp-tester`.
+- If a loaded calendar's computed hash doesn't match, it's excluded from the registry (and logged as an error).
 
 ---
 
+## REST API Routes
 
-## Express REST Server
+- `GET /calendars` — lists loaded calendar names (only those that passed the hash check).
+- `GET /calendars/:calendarName` — lists available snippet (rule) names for that calendar.
+- `GET /calendars/:calendarName/evaluate?rule=RULE&date=YYYY-MM-DD` — invokes the snippet and returns `{ "result": [...] }`.
 
-You can also run an **Express** server to expose these calendars via REST:
+> Example `curl` calls can be found in `src/scripts/test.sh`.
 
-
-### Routes Overview
-
-- `GET /calendars`  
-  Lists the loaded calendar names (only those that passed the hash check).  
-- `GET /calendars/:calendarName`  
-  Lists available snippet names for that calendar.  
-- `GET /calendars/:calendarName/evaluate?rule=RULE&date=YYYY-MM-DD`  
-  Invokes the snippet and returns `{ "result": <snippetOutput> }`.
-> Examples of REST API calls can be found in the `src/tests/` folder.
 ---
 
-## Generating and Validating Hashes
+## Security
 
-The tester application allows verifying whether the rules (snippets) written for each calendar function correctly.
+Rule snippets are executed with `eval`, and snippets can call each other (including recursively). This engine trusts the calendar files it's given — it does **not** sandbox snippet execution.
+
+- Only load calendars from sources you control or have reviewed.
+- Never wire an untrusted/user-uploaded calendar folder directly into `loadCalendarsWithHashCheck` or `capp-server`.
+- The hash check in `hash.json` guards against *accidental drift* between a calendar and its previously-validated content — it is not a security boundary against a malicious calendar author, since anyone able to edit the calendar files can also regenerate a matching hash with `capp-tester`.
+
+---
+
+## Development
+
 ```bash
-bin/tester-linux -c ./src/calendars -t ./src/tests -s ./src 
-```
-- -c --calendar <calendar_path> The folder where the JSON files describing the calendars and their corresponding JavaScript snippet files are located.
-- -t --test <tester_path> The folder where the test files are located.
-- -h --hash <hash_folder> The folder where the hash.json file located.
-
-Run the tester application with the prepared calendars and test files. The application reads all test files from the tests folder and executes all test steps.
-
-- If a test fails, an error will be logged in the console.
-- If all tests pass successfully, the application generates a verification hash key for each calendar found in the calendar_path folder.
-- The generated hash keys are written to the hash.json file inside the hash_folder.
-
-**Final Steps**
-
-- If everything is correct, copy the contents of calendar_path into the application's calendars/ folder.
-- Move the hash.json file from hash_folder to the application's root directory.
-
-Start the application. 
-``` bash
-node <app root folder>/index.js
+git clone https://github.com/GabrielPotter/capp.git
+cd capp
+npm install
+npm run build   # compiles src/ to dist/
+npm test        # runs capp-tester against src/calendars + src/tests, regenerates src/hash.json
+npm start        # runs capp-server against the bundled example calendar on port 3000
 ```
 
-When the server starts, it calls `loadCalendarsWithHashCheck`, which re-generates the hash in exactly the same manner. If mismatched, that calendar is not stored in the registry.
-
----
-
-## Running the Project
-
-### Local Development
-
-1. **Build**:
-   ```bash
-   npm run build
-   ```
-   This compiles TypeScript into `dist/`.
-
-   Compiles tester into `/bin`
-
-2. **Run the server**:
-   ```bash
-   node dist/index.js
-   ```
-   By default, it listens on port `3000`. Check console logs for messages.
-
-### Testing Calendars
-
-To run the CLI tester:
-```bash
-bin/tester_linux --help
-```
-
+`npm run build:bin` additionally produces standalone `capp-tester` executables (Linux/macOS/Windows) in `bin/` via [`pkg`](https://github.com/vercel/pkg), for environments without a Node.js runtime.
